@@ -4705,8 +4705,10 @@ class Image:
           return js
         elif (type == 'window'):
           from SimpleCV.Display import Display
-          d = Display(self.size())
-          self.save(d)
+          #d = Display(self.size())
+          d = Display()
+          d.show_image(self.applyLayers().toRGB().getBitmap())
+          #self.save(d)
           return d
         else:
           print "Unknown type to show"
