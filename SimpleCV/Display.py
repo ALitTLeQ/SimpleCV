@@ -596,6 +596,7 @@ class Display:
 
         for event in pg.event.get():
             if event.type == pg.QUIT:
+                pg.display.quit()
                 pg.quit()
                 self.done = True
             if event.type == pg.MOUSEMOTION:
@@ -698,19 +699,22 @@ class Display:
         >>> time.sleep(5)
         >>> d.quit()
         """
-        print "quit"
         pg.display.quit()
         pg.quit()
 '''
 import gtk
 from threading import Thread
 import gobject
+import time
 gtk.gdk.threads_init()
 
 class Display():
     def __init__(self,title="SimpleCV"):
         self.img = None
         self.img_gtk = None
+        self.img_thrd = None
+        self.img_thrd_flag = False
+        self.interval = 0.1
         self.mouseX = 0
         self.mouseY = 0
         self.mouse_rawX = 0
@@ -725,20 +729,40 @@ class Display():
         self.win = gtk.Window()
         self.win.set_title(title)
         self.win.connect("delete_event",self.leave_app)
+        self.box = gtk.VBox(False,2)
+        self.win.add(self.box)
+        self.box.show()
         self.image_box = gtk.EventBox()
         self.image_box.connect("motion_notify_event",self.motion_callback)
         self.image_box.connect("button_press_event",self.press_callback)
         self.image_box.connect("button_release_event",self.release_callback)
-        self.win.add(self.image_box)
-        #self.thread_gtk()           # thread for gtk.main() . Need to 
-                                    # consider multiple images too.
+        self.box.pack_start(self.image_box,False,False,2)
+        
+    def show(self,image):
+        if self.img_thrd:
+            # Thread exists. Hence change the flag to end the thread.
+            self.img_thrd_flag = False
+            #self.img_thrd.join()
+        # Create a new thread to show the image
+        self.img_thrd = Thread(target = self.show_image,args=(image,))
+        self.img_thrd.start()
     
     def show_image(self,image):
+        if self.done == True and self.img_gtk is None:
+            self.done = False
+            self.__init__()
+        elif self.done == True:
+            self.done = False
+            
         self.img = image
+        self.img_thrd_flag = True
+        
         if self.img_gtk is None:
             self.img_flag=0
             self.img_gtk = gtk.Image()          # Create gtk.Image() only once (first time)
+            #print self.img_gtk
             self.image_box.add(self.img_gtk)    # Add Image in the box, only once (first time)
+            
         self.img_pixbuf = gtk.gdk.pixbuf_new_from_data(self.img.tostring(),
                                                         gtk.gdk.COLORSPACE_RGB,
                                                         False,
@@ -749,20 +773,27 @@ class Display():
         self.img_gtk.set_from_pixbuf(self.img_pixbuf)
         self.img_gtk.show()
         self.win.show_all()
+        
         if not self.img_flag:
             self.thread_gtk()                   # gtk.main() only once (first time)
             self.img_flag=1                     # change flag
-        
+            
+        #print self.img_thrd_flag,"flag"
+        #print not self.done,"done"
+        while (not self.done and self.img_thrd_flag) :
+            time.sleep(self.interval)
+    
+    def remove_image(self):
+        self.image_gtk = None
+    
     def thread_gtk(self):
         # changed this function. Improved threading.
-        self.thrd = Thread(target=gtk.main, name = "GTK thread")
+        self.thrd = Thread(target=gtk.main)
         self.thrd.daemon = True
         self.thrd.start()
     
-    def leave_app(self,widget,data):
-        self.done = True
-        self.win.destroy()
-        gtk.main_quit()
+    def leave_app(self,widget,data=None):
+        self.quit()
     
     def release_callback(self,widget,event):
         self.mouseX = int(event.x)
@@ -812,5 +843,6 @@ class Display():
     
     def quit(self):
         self.done = True
+        self.img_gtk = None
         self.win.destroy()
-        gtk.main_quit()
+        #gtk.main_quit()

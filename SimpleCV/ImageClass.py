@@ -1,6 +1,7 @@
  #Load required libraries
 from SimpleCV.base import *
 from SimpleCV.Color import *
+from SimpleCV.Display import Display
 from numpy import int32
 from numpy import uint8
 from EXIF import *
@@ -527,6 +528,7 @@ class Image:
         """
         self._mLayers = []
         self.camera = camera
+        self.display = Display()
         self._colorSpace = colorSpace
         #Keypoint Descriptors 
         self._mKeyPoints = []
@@ -4705,11 +4707,17 @@ class Image:
           return js
         elif (type == 'window'):
           from SimpleCV.Display import Display
+          if self.display is None:
+              self.display = Display()
           #d = Display(self.size())
-          d = Display()
-          d.show_image(self.applyLayers().toRGB().getBitmap())
+          #d = Display()
           #self.save(d)
-          return d
+          if self.isBGR():
+            self.display.show(self.applyLayers().toRGB().getBitmap())
+          else:
+            self.display.show(self.applyLayers().getBitmap())
+          time.sleep(self.display.interval)
+          return self.display
         else:
           print "Unknown type to show"
 
