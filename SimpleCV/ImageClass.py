@@ -4709,14 +4709,10 @@ class Image:
           from SimpleCV.Display import Display
           if self.display is None:
               self.display = Display()
-          #d = Display(self.size())
-          #d = Display()
-          #self.save(d)
           if self.isBGR():
             self.display.show(self.applyLayers().toRGB().getBitmap())
           else:
             self.display.show(self.applyLayers().getBitmap())
-          time.sleep(self.display.interval)
           return self.display
         else:
           print "Unknown type to show"
