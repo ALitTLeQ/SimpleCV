@@ -2505,7 +2505,7 @@ class Image:
         :py:meth:`smartFindBlobs`
         """
         if (maxsize == 0):  
-            maxsize = self.width * self.height
+            maxsize = self.width * self.height / 2
         #create a single channel image, thresholded to parameters
             
         blobmaker = BlobMaker()
@@ -4662,48 +4662,6 @@ class Image:
         self.getDrawingLayer().setFontSize(fontsize)
         self.getDrawingLayer().text(text, (x, y), color)
     
-    
-    def drawRectangle(self,x,y,w,h,color=Color.RED,width=1,alpha=255):
-        """
-        **SUMMARY**
-
-        Draw a rectangle on the screen given the upper left corner of the rectangle
-        and the width and height. 
-        
-        **PARAMETERS**
-
-        * *x* - the x position.
-        * *y* - the y position.
-        * *w* - the width of the rectangle.
-        * *h* - the height of the rectangle.
-        * *color* - an RGB tuple indicating the desired color.
-        * *width* - the width of the rectangle, a value less than or equal to zero means filled in completely.
-        * *alpha* - the alpha value on the interval from 255 to 0, 255 is opaque, 0 is completely transparent. 
-
-        **RETURNS**
-
-        None - this operation is in place and adds the rectangle to the drawing layer. 
-
-        **EXAMPLE**
-        
-        >>> img = Image("lenna")
-        >>> img.drawREctange( 50,50,100,123)
-        >>> img.show()
-
-        **SEE ALSO**
-
-        :py:meth:`dl`
-        :py:meth:`drawCircle`
-        :py:meth:`drawRectangle`
-        :py:meth:`applyLayers`
-        :py:class:`DrawingLayer`
-
-        """
-        if( width < 1 ):
-            self.getDrawingLayer().rectangle((x,y),(w,h),color,filled=True,alpha=alpha)
-        else:
-            self.getDrawingLayer().rectangle((x,y),(w,h),color,width,alpha=alpha)
-            
     def drawBB(self,pt0,pt1,color=Color.RED,width=1,alpha=255):
         """
         **SUMMARY**
@@ -4747,7 +4705,48 @@ class Image:
         
         self.drawRectangle(xmin,ymin,xmax-xmin,ymax-ymin,color,width,alpha)
         return xmin,ymin,xmax,ymax
+    
+    def drawRectangle(self,x,y,w,h,color=Color.RED,width=1,alpha=255):
+        """
+        **SUMMARY**
+
+        Draw a rectangle on the screen given the upper left corner of the rectangle
+        and the width and height. 
         
+        **PARAMETERS**
+
+        * *x* - the x position.
+        * *y* - the y position.
+        * *w* - the width of the rectangle.
+        * *h* - the height of the rectangle.
+        * *color* - an RGB tuple indicating the desired color.
+        * *width* - the width of the rectangle, a value less than or equal to zero means filled in completely.
+        * *alpha* - the alpha value on the interval from 255 to 0, 255 is opaque, 0 is completely transparent. 
+
+        **RETURNS**
+
+        None - this operation is in place and adds the rectangle to the drawing layer. 
+
+        **EXAMPLE**
+        
+        >>> img = Image("lenna")
+        >>> img.drawREctange( 50,50,100,123)
+        >>> img.show()
+
+        **SEE ALSO**
+
+        :py:meth:`dl`
+        :py:meth:`drawCircle`
+        :py:meth:`drawRectangle`
+        :py:meth:`applyLayers`
+        :py:class:`DrawingLayer`
+
+        """
+        if( width < 1 ):
+            self.getDrawingLayer().rectangle((x,y),(w,h),color,filled=True,alpha=alpha)
+        else:
+            self.getDrawingLayer().rectangle((x,y),(w,h),color,width,alpha=alpha)
+            
     def drawRotatedRectangle(self,boundingbox,color=Color.RED,width=1):
         """
         **SUMMARY**
@@ -7561,7 +7560,7 @@ class Image:
             bwimg =bwimg.dilate(dilate)
         
         if (maxsize == 0):  
-            maxsize = self.width * self.height 
+            maxsize = self.width * self.height / 2
         #create a single channel image, thresholded to parameters
     
         blobmaker = BlobMaker()
@@ -8134,11 +8133,10 @@ class Image:
         :py:meth:`erode`
         """
         if (maxsize == 0):  
-            maxsize = self.width * self.height
+            maxsize = self.width * self.height / 2
         #create a single channel image, thresholded to parameters
         if( mask.width != self.width or mask.height != self.height ):
             logger.warning("ImageClass.findBlobsFromMask - your mask does not match the size of your image")
-            print "FML"
             return None
 
         blobmaker = BlobMaker()
