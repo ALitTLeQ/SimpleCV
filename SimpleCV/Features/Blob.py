@@ -58,6 +58,9 @@ class Blob(Feature):
     mMask = '' #Image()# A mask of the blob area
     mHullMask = '' #Image()#A mask of the hull area ... we may want to use this for the image mask. 
     mHoleContour = []  # list of hole contours
+    mAvg=() # tuple of average color
+    mStdDev=() # tuple of std deviation
+    mEllipse=[]
     #mVertEdgeHist = [] #vertical edge histogram
     #mHortEdgeHist = [] #horizontal edge histgram
     
@@ -89,6 +92,9 @@ class Blob(Feature):
         self.mVertEdgeHist = [] #vertical edge histogram
         self.mHortEdgeHist = [] #horizontal edge histgram
         self.points = []
+        self.mAvg = ()
+        self.mStdDev = ()
+        self.mEllipse = []
         #TODO 
         # I would like to clean up the Hull mask parameters
         # it seems to me that we may want the convex hull to be
@@ -198,10 +204,15 @@ class Blob(Feature):
         hack = (self.mBoundingBox[0],self.mBoundingBox[1],self.mBoundingBox[2],self.mBoundingBox[3])
         cv.SetImageROI(self.image.getBitmap(),hack)
         #may need the offset paramete
-        avg = cv.Avg(self.image.getBitmap(),self.mMask._getGrayscaleBitmap())
+        avg, self.mStdDev = cv.AvgSdv(self.image.getBitmap(),self.mMask._getGrayscaleBitmap())
         cv.ResetImageROI(self.image.getBitmap())
+        self.mAvg = tuple(reversed(avg[0:3]))
         
-        return tuple(reversed(avg[0:3]))
+        return self.mAvg
+        
+    def stdDev(self):
+        self.meanColor()
+        return self.mStdDev
 
     def area(self):
         """
@@ -1029,6 +1040,23 @@ class Blob(Feature):
         otherM = otherSigns * otherLogs
         
         return np.sum(abs((1/ myM - 1/ otherM)))
+        
+    def isEmpty(self):
+        return self.mContour == []
+        
+    def moment(self):
+        return self.mHu
+        
+    def getBoundingBox(self):
+        return self.mBoundingBox
+    
+    """
+    def getEllipse(self):
+        if self.mEllipse:
+            return self.mEllipse
+    """
+    
+    #def fillBlob()
         
     def __repr__(self):
         return "SimpleCV.Features.Blob.Blob object at (%d, %d) with area %d" % (self.x, self.y, self.area())
