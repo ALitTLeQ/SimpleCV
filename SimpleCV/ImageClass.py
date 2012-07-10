@@ -653,7 +653,7 @@ class Image:
                 try:
                     self._bitmap = cv.LoadImage(self.filename, iscolor=cv.CV_LOAD_IMAGE_COLOR)
                     if self.cv2_flag:
-                        print "creating numpy"
+                        #print "creating numpy"
                         self._numpy = cv2.imread(self.filename)
                 except:
                     self._pil = pil.open(self.filename).convert("RGB")
@@ -1546,10 +1546,7 @@ class Image:
 
         if self._numpy != "":
             return self._numpy
-        print self._numpy
-        if not self._numpy:
-            print "creating numpy"
-            self._numpy = np.array(self.getMatrix())[:, :, ::-1].transpose([1, 0, 2])
+        self._numpy = np.array(self.getMatrix())[:, :, ::-1].transpose([1, 0, 2])
         return self._numpy
 
 
