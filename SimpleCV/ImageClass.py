@@ -429,7 +429,7 @@ class Image:
     >>> img = Image("http://www.simplecv.org/image.png")
 
     """
-    
+    cv2_flag = False
     width = 0    #width and height in px
     height = 0
     depth = 0
@@ -541,6 +541,14 @@ class Image:
         self._mPalette = None
         self._mPaletteMembers = None
         self._mPalettePercentages = None
+        
+        try:
+            import cv2
+            import cv2.cv as cv
+            self.cv2_flag = True
+        except ImportError:
+            import cv
+            print "Unable to find OpenCV >= 2.3"
 
         #Check if need to load from URL
         #(this can be made shorter)if type(source) == str and (source[:7].lower() == "http://" or source[:8].lower() == "https://"):
@@ -589,7 +597,7 @@ class Image:
                 source = source.astype(np.uint8)
                 self._numpy = source
 
-                invertedsource = source[:, :, ::-1].transpose([1, 0, 2])
+                invertedsource = source[:, :, ::-1]#.transpose([1, 0, 2])
                 self._bitmap = cv.CreateImageHeader((invertedsource.shape[1], invertedsource.shape[0]), cv.IPL_DEPTH_8U, 3)
                 cv.SetData(self._bitmap, invertedsource.tostring(), 
                     invertedsource.dtype.itemsize * 3 * invertedsource.shape[1])
@@ -644,6 +652,9 @@ class Image:
                 self.filename = source
                 try:
                     self._bitmap = cv.LoadImage(self.filename, iscolor=cv.CV_LOAD_IMAGE_COLOR)
+                    if self.cv2_flag:
+                        print "creating numpy"
+                        self._numpy = cv2.imread(self.filename)
                 except:
                     self._pil = pil.open(self.filename).convert("RGB")
                     self._bitmap = cv.CreateImageHeader(self._pil.size, cv.IPL_DEPTH_8U, 3)
@@ -660,6 +671,9 @@ class Image:
             cv.SetData(self._bitmap, pg.image.tostring(self._pgsurface, "RGB"))
             cv.CvtColor(self._bitmap, self._bitmap, cv.CV_RGB2BGR)
             self._colorSpace = ColorSpace.BGR
+            import pygame.surfarray
+            self._numpy = pygame.surfarray.array3d(self._pgsurface) #Here's the problem.
+            #conversion of pygame surface to 3D numpy array isn't compatible with cv2
 
 
         elif (PIL_ENABLED and (
@@ -677,6 +691,7 @@ class Image:
             cv.SetData(self._bitmap, self._pil.tostring())
             self._colorSpace = ColorSpace.BGR
             cv.CvtColor(self._bitmap, self._bitmap, cv.CV_RGB2BGR)
+            self._numpy = np.asarray(self._pil).astype('uint8')
             #self._bitmap = cv.iplimage(self._bitmap)
 
 
@@ -1531,9 +1546,10 @@ class Image:
 
         if self._numpy != "":
             return self._numpy
-    
-    
-        self._numpy = np.array(self.getMatrix())[:, :, ::-1].transpose([1, 0, 2])
+        print self._numpy
+        if not self._numpy:
+            print "creating numpy"
+            self._numpy = np.array(self.getMatrix())[:, :, ::-1].transpose([1, 0, 2])
         return self._numpy
 
 
