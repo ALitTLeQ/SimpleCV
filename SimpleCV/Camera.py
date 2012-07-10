@@ -393,11 +393,12 @@ class Camera(FrameSource):
     Read up on OpenCV's CaptureFromCAM method for more details if you need finer
     control than just basic frame retrieval
     """
+    
     capture = ""   #cvCapture object
     thread = ""
     pygame_camera = False
     pygame_buffer = ""
-  
+    cv2_flag = False
   
     prop_map = {"width": cv.CV_CAP_PROP_FRAME_WIDTH,
         "height": cv.CV_CAP_PROP_FRAME_HEIGHT,
@@ -440,8 +441,18 @@ class Camera(FrameSource):
 
    
         """
+        try:
+            import cv2
+            import cv2.cv as cv
+            self.cv2_flag = True
+        except ImportError:
+            import cv
+            print "OpenCV >= 2.3 not found. cv found."
 
-        
+        if self.cv2_flag:
+            self.capture = cv2.VideoCapture(0)
+            return
+            #print "I did pass"
 
         #This is to add support for XIMEA cameras.
         if isinstance(camera_index, str):
@@ -522,6 +533,14 @@ class Camera(FrameSource):
         >>> cam = Camera()
         >>> prop = cam.getProperty("width")
         """
+        if self.cv2_flag:
+            if self.capture:
+                try:
+                    return self.capture.get(self.prop_map[prop.lower()])
+                except KeyError:
+                    print "Camera object has no such property"
+                    return None
+
         if self.pygame_camera:
           if prop.lower() == 'width':
             return self.capture.get_size()[0]
@@ -574,7 +593,14 @@ class Camera(FrameSource):
         >>>    cam.getImage().show()
 
         """
-        
+        if self.cv2_flag:
+            ret, frame = self.capture.read()
+            if ret:
+                return Image(frame)
+            else:
+                print "Couldn't capture the image"
+                return None
+                
         if self.pygame_camera:
             return Image(self.pygame_buffer.copy())
         
@@ -588,6 +614,26 @@ class Camera(FrameSource):
         newimg = cv.CreateImage(cv.GetSize(frame), cv.IPL_DEPTH_8U, 3)
         cv.Copy(frame, newimg)
         return Image(newimg, self)
+    
+    def setProperty(self,prop,val):
+        if self.cv2_flag:
+            if self.capture:
+                try:
+                    print self.prop_map[prop.lower()]
+                    print val
+                    self.capture.set(self.capture.release(self.prop_map[prop.lower()],val))
+                except KeyError:
+                    print "Camera object has no such property"
+            else:
+                print "Camera is not initialized."
+        else:
+            print "This is only available for OpenCV >= 2.3"
+    
+    def release(self):
+        if self.cv2_flag:
+            self.capture.release()
+        else:
+            print "This is only available for OpenCV >= 2.3"
 
 
           
@@ -609,6 +655,7 @@ class VirtualCamera(FrameSource):
     """
     source = ""
     sourcetype = ""
+    cv2_flag = False
   
     def __init__(self, s, st):
         """
@@ -632,6 +679,14 @@ class VirtualCamera(FrameSource):
         >>> vc = VirtualCamera("./path_to_images/", "imageset")
 
         """
+        try:
+            import cv2
+            import cv2.cv as cv
+            self.cv2_flag = True
+        except ImportError:
+            import cv
+            print "cv2 not found"
+            
         self.source = s
         self.sourcetype = st
         self.counter = 0
@@ -644,6 +699,9 @@ class VirtualCamera(FrameSource):
                 self.source.load(s)
         
         if (self.sourcetype == 'video'):
+            if self.cv2_flag:
+                self.capture = cv2.VideoCapture(self.source)
+                return
             self.capture = cv.CaptureFromFile(self.source) 
     
     def getImage(self):
@@ -671,6 +729,8 @@ class VirtualCamera(FrameSource):
             return img
         
         if (self.sourcetype == 'video'):
+            if self.cv2_flag:
+                return Image(self.capture.read())
             return Image(cv.QueryFrame(self.capture), self)
  
 class Kinect(FrameSource):
