@@ -461,7 +461,8 @@ class Image:
     _grayNumpy = "" # grayscale numpy for keypoint stuff
     _colorSpace = ColorSpace.UNKNOWN #Colorspace Object
     _pgsurface = ""
-  
+    _cv2Numpy = None #numpy array for OpenCV >= 2.3
+    _cv2GrayNumpy = None #grayscale numpy array for OpenCV >= 2.3
     #For DFT Caching 
     _DFT = [] #an array of 2 channel (real,imaginary) 64F images
 
@@ -496,7 +497,7 @@ class Image:
     #initialize the frame
     #parameters: source designation (filename)
     #todo: handle camera/capture from file cases (detect on file extension)
-    def __init__(self, source = None, camera = None, colorSpace = ColorSpace.UNKNOWN,verbose=True):
+    def __init__(self, source = None, camera = None, colorSpace = ColorSpace.UNKNOWN, verbose=True, cv2_transpose=True):
         """ 
         **SUMMARY**
 
@@ -588,11 +589,13 @@ class Image:
                 #convert to an iplimage bitmap
                 source = source.astype(np.uint8)
                 self._numpy = source
-
-                invertedsource = source[:, :, ::-1].transpose([1, 0, 2])
+                if cv2_transpose:
+                    invertedsource = source[:, :, ::-1].transpose([1, 0, 2])
+                else:
+                    invertedsource = source
                 self._bitmap = cv.CreateImageHeader((invertedsource.shape[1], invertedsource.shape[0]), cv.IPL_DEPTH_8U, 3)
                 cv.SetData(self._bitmap, invertedsource.tostring(), 
-                    invertedsource.dtype.itemsize * 3 * invertedsource.shape[1])
+                            invertedsource.dtype.itemsize * 3 * invertedsource.shape[1])
                 self._colorSpace = ColorSpace.BGR #this is an educated guess
             else:
                 #we have a single channel array, convert to an RGB iplimage
@@ -1535,7 +1538,69 @@ class Image:
     
         self._numpy = np.array(self.getMatrix())[:, :, ::-1].transpose([1, 0, 2])
         return self._numpy
+    
+    def getNumpyCv2(self):
+        """
+        **SUMMARY**
+       
+        Get a Numpy array of the image in width x height x RGB dimensions compatible with OpenCV >= 2.3
+        
+        **RETURNS**
 
+        Returns the  3D numpy array of the image compatible with OpenCV >= 2.3
+        
+        **EXAMPLE**
+        
+        >>> img = Image("lenna")
+        >>> rawImg  = img.getNumpyCv2()
+
+        **SEE ALSO**
+
+        :py:meth:`getEmpty`
+        :py:meth:`getBitmap`
+        :py:meth:`getMatrix`
+        :py:meth:`getPIL`
+        :py:meth:`getGrayNumpy`
+        :py:meth:`getGrayscaleMatrix`
+        :py:meth:`getNumpy`
+        :py:meth:`getGrayNumpyCv2`
+        
+        """
+        
+        if not self._cv2Numpy:
+            self._cv2Numpy = np.array(self.getMatrix())
+        return self._cv2Numpy
+        
+    def getGrayNumpyCv2(self):
+        """
+        **SUMMARY**
+       
+        Get a Grayscale Numpy array of the image in width x height y compatible with OpenCV >= 2.3
+        
+        **RETURNS**
+
+        Returns the grayscale numpy array compatible with OpenCV >= 2.3 
+        
+        **EXAMPLE**
+        
+        >>> img = Image("lenna")
+        >>> rawImg  = img.getNumpyCv2()
+
+        **SEE ALSO**
+
+        :py:meth:`getEmpty`
+        :py:meth:`getBitmap`
+        :py:meth:`getMatrix`
+        :py:meth:`getPIL`
+        :py:meth:`getGrayNumpy`
+        :py:meth:`getGrayscaleMatrix`
+        :py:meth:`getNumpy`
+        :py:meth:`getGrayNumpyCv2`
+        
+        """
+        if not self._cv2GrayNumpy:
+            self._cv2GrayNumpy = np.array(self.getGrayscaleMatrix())
+        return self._cv2GrayNumpy
 
     def _getGrayscaleBitmap(self):
         if (self._graybitmap):
@@ -10123,6 +10188,33 @@ class Image:
             
             retVal = self.mergeChannels(b,g,r)
         return retVal
+        
+    def track(self, img1, method, bb):
+        if not img1 and not method and not bb:
+            print "Invalid Arguments"
+            return None
+        try:
+            import cv2
+        except ImportError:
+            print "Tracking is available for OpenCV >= 2.3"
+            return None
+        
+        if method.lower() == "camshift":
+            hsv = self.toHSV().getNumpyCv2()
+            mask = cv2.inRange(hsv, np.array((0., 60., 32.)), np.array((180., 255., 255.)))
+            x0, y0, w, h = bb
+            x1 = x0 + w -1
+            y1 = y0 + h -1
+            hsv_roi = hsv[y0:y1, x0:x1]
+            mask_roi = mask[y0:y1, x0:x1]
+            hist = cv2.calcHist( [hsv_roi], [0], mask_roi, [16], [0, 180] )
+            cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX);
+            hist_flat = hist.reshape(-1)
+            prob = cv2.calcBackProject([hsv,img1.toHSV().getNumpyCv2()], [0], hist_flat, [0, 180], 1)
+            prob &= mask
+            term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
+            new_ellipse, track_window = cv2.CamShift(prob, bb, term_crit)
+            return track_window
 
     def __getstate__(self):
         return dict( size = self.size(), colorspace = self._colorSpace, image = self.applyLayers().getBitmap().tostring() )
