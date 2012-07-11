@@ -10190,6 +10190,42 @@ class Image:
         return retVal
         
     def track(self, img1, method, bb):
+        """
+        **DESCRIPTION**
+
+        This method is for Tracking using various different Tracking methods. eg. CAMShift
+
+        **PARAMETERS**
+        
+        * *img1* - SimpleCV Image object - The previous Image
+        * *method* - str - Name of the method. eg. CAMShift
+        * *bb* - tuple - A tuple consisting of 4 int - (x, y, w, h)
+                         x - x co-ordinate of the top left corner of the bounding box
+                         y - y co-ordinate of the top left corner of the bounding box
+                         w - width of the bounding box
+                         h - height of the bounding box
+                         
+        **RETURNS**
+
+        * *bb*- tuple -  New Bounding Box
+                         A tuple consisting of 4 int - (x, y, w, h)
+                         x - x co-ordinate of the top left corner of the bounding box
+                         y - y co-ordinate of the top left corner of the bounding box
+                         w - width of the bounding box
+                         h - height of the bounding box
+
+        **EXAMPLE**
+
+        >>> cam = Camera()
+        >>> img1 = cam.getImage()
+        >>> bb = (100,100,140,150)
+        >>> time.sleep(0.1)
+        >>> img2 = cam.getImage()
+        >>> new_bb = img2.track(img1, "camshift", bb)
+        
+        See example SimpleCV/examples/detection/camshifttrack.py
+        
+        """
         if not img1 and not method and not bb:
             print "Invalid Arguments"
             return None
