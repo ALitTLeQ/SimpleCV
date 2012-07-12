@@ -10189,46 +10189,20 @@ class Image:
             retVal = self.mergeChannels(b,g,r)
         return retVal
         
-    def track(self, img1, method, bb):
-        """
-        **DESCRIPTION**
-
-        This method is for Tracking using various different Tracking methods. eg. CAMShift
-
-        **PARAMETERS**
-        
-        * *img1* - SimpleCV Image object - The previous Image
-        * *method* - str - Name of the method. eg. CAMShift
-        * *bb* - tuple - A tuple consisting of 4 int - (x, y, w, h)
-                         x - x co-ordinate of the top left corner of the bounding box
-                         y - y co-ordinate of the top left corner of the bounding box
-                         w - width of the bounding box
-                         h - height of the bounding box
-                         
-        **RETURNS**
-
-        * *bb*- tuple -  New Bounding Box
-                         A tuple consisting of 4 int - (x, y, w, h)
-                         x - x co-ordinate of the top left corner of the bounding box
-                         y - y co-ordinate of the top left corner of the bounding box
-                         w - width of the bounding box
-                         h - height of the bounding box
-
-        **EXAMPLE**
-
-        >>> cam = Camera()
-        >>> img1 = cam.getImage()
-        >>> bb = (100,100,140,150)
-        >>> time.sleep(0.1)
-        >>> img2 = cam.getImage()
-        >>> new_bb = img2.track(img1, "camshift", bb)
-        
-        See example SimpleCV/examples/detection/camshifttrack.py
-        
-        """
-        if not img1 and not method and not bb:
-            print "Invalid Arguments"
+    def track(self, method, fs=None, img1=None, bb=None, num_frames=3):
+        if not fs and not img1:
+            print "Inavlid. Must provide FeatureSet or Image"
             return None
+        
+        if not fs and not bb:
+            print "Inavlid. Must provide Bounding Box with Image"
+            return None
+            
+        if not fs:
+            fs = FeatureSet()
+        else:
+            img1 = fs[-1].image
+            bb = fs[-1].bb
         try:
             import cv2
         except ImportError:
@@ -10246,11 +10220,19 @@ class Image:
             hist = cv2.calcHist( [hsv_roi], [0], mask_roi, [16], [0, 180] )
             cv2.normalize(hist, hist, 0, 255, cv2.NORM_MINMAX);
             hist_flat = hist.reshape(-1)
-            prob = cv2.calcBackProject([hsv,img1.toHSV().getNumpyCv2()], [0], hist_flat, [0, 180], 1)
+            imgs = [hsv]
+            if len(fs) > num_frames and num_frames > 1:
+                for feat in fs[-num_frames:]:
+                    imgs.append(feat.image.toHSV().getNumpyCv2())
+            else:
+                imgs.append(img1.toHSV().getNumpyCv2())
+                    
+            prob = cv2.calcBackProject(imgs, [0], hist_flat, [0, 180], 1)
             prob &= mask
             term_crit = ( cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 1 )
             new_ellipse, track_window = cv2.CamShift(prob, bb, term_crit)
-            return track_window
+            fs.append(CAMShift(self, track_window, new_ellipse))
+            return fs
 
     def __getstate__(self):
         return dict( size = self.size(), colorspace = self._colorSpace, image = self.applyLayers().getBitmap().tostring() )
@@ -10271,7 +10253,7 @@ class Image:
 Image.greyscale = Image.grayscale
 
 
-from SimpleCV.Features import FeatureSet, Feature, Barcode, Corner, HaarFeature, Line, Chessboard, TemplateMatch, BlobMaker, Circle, KeyPoint, Motion, KeypointMatch
+from SimpleCV.Features import FeatureSet, Feature, Barcode, Corner, HaarFeature, Line, Chessboard, TemplateMatch, BlobMaker, Circle, KeyPoint, Motion, KeypointMatch, CAMShift
 from SimpleCV.Stream import JpegStreamer
 from SimpleCV.Font import *
 from SimpleCV.DrawingLayer import *

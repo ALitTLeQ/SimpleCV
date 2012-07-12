@@ -84,6 +84,14 @@ class FeatureSet(list):
                 color = Color().getRandom()
             f.draw(color=color,width=width)
     
+    def drawAll(self, color=Color.GREEN, width=2):
+        fs = self
+        img = self[-1].image
+        for i in range(len(fs)-1):
+            p1 = fs[i].center
+            p2 = fs[i+1].center
+            img.drawLine((p1[0],p1[1]),(p2[0],p2[1]), color=color, thickness=width)
+    
     def show(self, color = Color.GREEN, autocolor = False,width=1):
         """
         **EXAMPLE**
