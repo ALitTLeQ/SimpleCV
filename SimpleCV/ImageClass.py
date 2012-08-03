@@ -4259,6 +4259,28 @@ class Image:
         :py:meth:`edges`
         
         """
+        import cv2
+        import cv2.cv as cv
+
+        g = self.getGrayNumpyCv2()
+        em = cv2.Canny(g, cannyth1, cannyth2)
+        l = cv2.HoughLines(em, 1.0, cv.CV_PI/180.0, threshold)
+        l = l[0]
+
+        linesFS = FeatureSet()
+        for pt in l:
+            rho = pt[0]
+            theta = pt[1]
+            a = cos(theta)
+            b = sin(theta)
+            x0 = a*rho
+            y0 = b*rho
+            p1 = array([int(x0+1000*(-b)), (int(y0 + 1000*a))])
+            p2 = array([int(x0-1000*(-b)), (int(y0 - 1000*a))])
+            linesFS.append(Line(i, (p1, p2)))
+
+        return linesFS
+        """
         em = self._getEdgeMap(cannyth1, cannyth2)
     
     
@@ -4269,7 +4291,7 @@ class Image:
         for l in lines:
             linesFS.append(Line(self, l))  
         return linesFS
-    
+        """
     
     
     
