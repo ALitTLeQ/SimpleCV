@@ -4277,7 +4277,7 @@ class Image:
             y0 = b*rho
             p1 = array([int(x0+1000*(-b)), (int(y0 + 1000*a))])
             p2 = array([int(x0-1000*(-b)), (int(y0 - 1000*a))])
-            linesFS.append(Line(i, (p1, p2)))
+            linesFS.append(Line(self, (p1, p2)))
 
         return linesFS
         """
