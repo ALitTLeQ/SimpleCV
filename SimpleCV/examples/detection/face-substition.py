@@ -7,7 +7,7 @@ import time
 from SimpleCV import *
 
 cam = Camera() #initialize the camera
-troll_face = Image('troll_face.png', sample=True)
+troll_face = Image('troll_face.png')
 # Loop forever
 while True:
     image = cam.getImage().flipHorizontal().scale(320, 240) # get image, flip it so it looks mirrored, scale to speed things up

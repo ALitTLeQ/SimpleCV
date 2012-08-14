@@ -2836,6 +2836,7 @@ def test_image_temp_save():
          assert False
   assert True
   
+<<<<<<< HEAD
 def test_upload_dropbox():
     try:
        import dropbox
@@ -2855,3 +2856,24 @@ def test_upload_dropbox():
                pass
            else :
                assert False
+=======
+def test_save_to_gif():
+    imgs = ImageSet()
+    imgs.append(Image('../sampleimages/tracktest0.jpg'))
+    imgs.append(Image('../sampleimages/tracktest1.jpg'))
+    imgs.append(Image('../sampleimages/tracktest2.jpg'))
+    imgs.append(Image('../sampleimages/tracktest3.jpg'))
+    imgs.append(Image('../sampleimages/tracktest4.jpg'))
+    imgs.append(Image('../sampleimages/tracktest5.jpg'))
+    imgs.append(Image('../sampleimages/tracktest6.jpg'))
+    imgs.append(Image('../sampleimages/tracktest7.jpg'))
+    imgs.append(Image('../sampleimages/tracktest8.jpg'))
+    imgs.append(Image('../sampleimages/tracktest9.jpg'))
+
+    assert imgs.save('test_save_to_gif.gif') == len(imgs)
+
+def test_load_gif():
+    imgs = ImageSet()
+    imgs.load("../sampleimages/test_load_gif.gif")
+    assert len(imgs)
+>>>>>>> upstream/develop

@@ -192,6 +192,7 @@ def self_update():
 
 def main(*args):
     log_level = logging.WARNING
+<<<<<<< HEAD
 
     if len(sys.argv) > 1 and len(sys.argv[1]) > 1:
       flag = sys.argv[1]
@@ -215,6 +216,21 @@ def main(*args):
       elif flag in ['--debug','debug']:
         log_level = logging.DEBUG
 
+=======
+    if len(args) and len(args[0]) > 1:
+        if "notebook" in args[0] and IPVER > 10:
+            run_notebook()
+        elif "update" in args[0]:
+            self_update()
+
+        for flag in args[0]:
+            if flag in ["--headless","headless"]:
+                init_options_handler.set_headless()
+            elif flag in ['--nowarnings','nowarnings']:
+                log_level = logging.INFO
+            elif flag in ['--debug','debug']:
+                log_level = logging.DEBUG
+>>>>>>> upstream/develop
 
     init_logging(log_level)
     shellclear()
