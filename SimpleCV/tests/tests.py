@@ -3452,6 +3452,7 @@ def test_linescan_detrend():
     if lineScan_perform_diff(l1, l2, LineScan.detrend):
         pass
     else:
+<<<<<<< HEAD
         assert False
 
 def test_linescan_runningAverage():
@@ -3462,3 +3463,6 @@ def test_linescan_runningAverage():
         pass
     else:
         assert False
+=======
+        assert False
+>>>>>>> 8482988925d1acdf50946968908acde84e059d28
