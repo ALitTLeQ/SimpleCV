@@ -13487,6 +13487,7 @@ class Image:
 
         w, h = recognizer.imageSize
         label = recognizer.predict(self.resize(w, h))
+        # damn
         return label
 
     def findAndRecognizeFaces(self, recognizer, cascade=None):
