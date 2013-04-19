@@ -1020,7 +1020,8 @@ class Image:
                 cv.Merge(source, source, source, None, self._bitmap)
                 self._colorSpace = ColorSpace.BGR
             else:
-                self._bitmap = source
+                self._bitmap = cv.CreateImage(cv.GetSize(source), cv.IPL_DEPTH_8U, 3)
+                cv.Copy(source, self._bitmap, None)
                 self._colorSpace = ColorSpace.BGR
         elif (type(source) == type(str()) or source.__class__.__name__ == 'StringIO'):
             if source == '':
