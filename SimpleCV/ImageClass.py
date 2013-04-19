@@ -1783,10 +1783,12 @@ class Image:
 
         """
         if (self._bitmap):
-            return self._bitmap
+            pass
         elif (self._matrix):
             self._bitmap = cv.GetImage(self._matrix)
-        return self._bitmap
+        retVal = cv.CreateImage(cv.GetSize(self._bitmap), cv.IPL_DEPTH_8U, 3)
+        cv.Copy(retVal, self._bitmap, None)
+        return retVal
 
 
     def getMatrix(self):
@@ -1818,10 +1820,12 @@ class Image:
 
         """
         if (self._matrix):
-            return self._matrix
+            pass
         else:
             self._matrix = cv.GetMat(self.getBitmap()) #convert the bitmap to a matrix
-            return self._matrix
+        retVal = cv.CreateMat(self._matrix.rows, self._matrix.cols, self._matrix.type)
+        cv.Copy(self._matrix, retVal, None)
+        return self._matrix
 
 
     def getFPMatrix(self):
@@ -1893,7 +1897,8 @@ class Image:
             rgbbitmap = self.getEmpty()
             cv.CvtColor(self.getBitmap(), rgbbitmap, cv.CV_BGR2RGB)
             self._pil = pil.fromstring("RGB", self.size(), rgbbitmap.tostring())
-        return self._pil
+            retVal = copy(self._pil)
+        return retVal
 
 
     def getGrayNumpy(self):
@@ -1923,11 +1928,11 @@ class Image:
 
         """
         if( self._grayNumpy != "" ):
-            return self._grayNumpy
+            pass
         else:
             self._grayNumpy = uint8(np.array(cv.GetMat(self._getGrayscaleBitmap())).transpose())
 
-        return self._grayNumpy
+        return np.copy(self._grayNumpy)
 
     def getNumpy(self):
         """
@@ -1956,11 +1961,10 @@ class Image:
         """
 
         if self._numpy != "":
-            return self._numpy
-
+            pass
 
         self._numpy = np.array(self.getMatrix())[:, :, ::-1].transpose([1, 0, 2])
-        return self._numpy
+        return np.copy(self._numpy)
 
     def getNumpyCv2(self):
         """
@@ -1992,7 +1996,7 @@ class Image:
 
         if type(self._cv2Numpy) is not np.ndarray:
             self._cv2Numpy = np.array(self.getMatrix())
-        return self._cv2Numpy
+        return np.copy(self._cv2Numpy)
 
     def getGrayNumpyCv2(self):
         """
@@ -2023,13 +2027,11 @@ class Image:
         """
         if type(self._cv2GrayNumpy) is not np.ndarray:
             self._cv2GrayNumpy = np.array(self.getGrayscaleMatrix())
-        return self._cv2GrayNumpy
+        return np.copy(self._cv2GrayNumpy)
 
     def _getGrayscaleBitmap(self):
         if (self._graybitmap):
-            return self._graybitmap
-
-
+            pass
         self._graybitmap = self.getEmpty(1)
         temp = self.getEmpty(3)
         if( self._colorSpace == ColorSpace.BGR or
@@ -2051,7 +2053,9 @@ class Image:
         else:
             logger.warning("Image._getGrayscaleBitmap: There is no supported conversion to gray colorspace")
             return None
-        return self._graybitmap
+        retVal = cv.CreateImage(cv.GetSize(self._bitmap), cv.IPL_DEPTH_8U, 1)
+        cv.Copy(self._graybitmap, retVal, None)
+        return retVal
 
 
     def getGrayscaleMatrix(self):
@@ -2083,24 +2087,24 @@ class Image:
 
         """
         if (self._grayMatrix):
-            return self._grayMatrix
+            pass
         else:
             self._grayMatrix = cv.GetMat(self._getGrayscaleBitmap()) #convert the bitmap to a matrix
-            return self._grayMatrix
+        retVal = cv.CreateMat(self._grayMatrix.rows, self._grayMatrix.cols, self._grayMatrix.type)
+        cv.Copy(self._grayMatrix, retVal, None)
+        return retVal
 
 
     def _getEqualizedGrayscaleBitmap(self):
         if (self._equalizedgraybitmap):
-            return self._equalizedgraybitmap
-
-
-        self._equalizedgraybitmap = self.getEmpty(1)
-        cv.EqualizeHist(self._getGrayscaleBitmap(), self._equalizedgraybitmap)
-
-
-        return self._equalizedgraybitmap
-
-
+            pass
+        else:
+            self._equalizedgraybitmap = self.getEmpty(1)
+            cv.EqualizeHist(self._getGrayscaleBitmap(), self._equalizedgraybitmap)
+        retVal = cv.CreateImage(cv.GetSize(self._getEqualizedGrayscaleBitmap), cv.IPL_DEPTH_8U, 1)
+        cv.Copy(self._equalizedgraybitmap, retVal, None)
+        return retVal        
+        
     def equalize(self):
         """
         **SUMMARY**
