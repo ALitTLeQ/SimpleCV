@@ -109,7 +109,7 @@ def surfTracker(img, bb, ts, **kwargs):
         return None
 
     if sd is None:
-        track = SURFTracker(img, skp, detector, descriptor, templateImg, skp, sd, tkp, td)
+        track = SURFTrack(img, skp, detector, descriptor, templateImg, skp, sd, tkp, td)
         return track
 
     # flann based matcher
