@@ -1430,25 +1430,26 @@ class Blob(Feature):
 
     def smoothContour(self, levels=2):
         """
-        def getAve(points):
-            points[len(points)/2] = ((points[0][0]+points[-1][0])/2, (points[0][1]+points[-1][1])/2)
-            return points
-        def smooth(points):
-            points = getAve(points)
-            if len(points) > 2:
-                points[:len(points)/2+1] = smooth(points[:len(points)/2+1])
-                points[len(points)/2:] = smooth(points[len(points)/2:])
-            return points
+        **SUMMARY**
 
-        contour = self.contour()
-        new_contour = []
-        for i in xrange(1,len(contour)-1):
-            points = [0]*(2*levels-1)
-            points[0] = ((contour[i-1][0]+contour[i][0])/2, (contour[i-1][1]+contour[i][1])/2)
-            points[-1] = ((contour[i][0]+contour[i+1][0])/2, (contour[i][1]+contour[i+1][1])/2)
-            points = smooth(points)
-            new_contour+=points
-        new_contour = [contour[0]]+new_contour+[contour[-1]]
+        Makes a smooth contour based on the given levels.
+
+        **PARAMETERS**
+
+        *levels* - The number of neighboring points to be considered
+
+        **RETURNS**
+
+        FeatureSet - A FeatureSet of Line
+
+        **EXAMPLE**
+
+        >>> img = Image('lenna')
+        >>> blobs = img.findBlobs()
+        >>> blob = blobs[-1]
+        >>> newcontour = blob.smoothContour()
+        >>> newcontour.draw(width=3)
+        >>> img.show()
         """
         contour = self.contour()
         x = zip(*contour)[0]
@@ -1459,7 +1460,10 @@ class Blob(Feature):
         y = LineScan(y).smooth(levels)
         x = x[levels:-levels]
         y = y[levels:-levels]
-        return zip(x, y)
+        lines = [Line(self.image, ((x[i], y[i]), (x[i-1], y[i-1])))
+                 for i in xrange(len(x)-1)]
+        lines = FeatureSet(lines)
+        return lines
 
 
 from SimpleCV.Features import Line, Corner
