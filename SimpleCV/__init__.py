@@ -14,6 +14,7 @@ from SimpleCV.Segmentation import *
 from SimpleCV.MachineLearning import *
 from SimpleCV.LineScan import *
 from SimpleCV.DFT import DFT
+from SimpleCV.DWT import DWT
 
 if (__name__ == '__main__'):
     from SimpleCV.Shell import *
